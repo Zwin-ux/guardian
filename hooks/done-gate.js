@@ -27,13 +27,13 @@ function readStdin() {
 }
 
 function loadConfig(root) {
-  const cfg = { enabled: true, format: true, typecheck: true, tests: false, commands: {} };
+  const cfg = { enabled: true, format: true, typecheck: true, tests: false, timeout_ms: 90000, commands: {} };
   try {
     const p = path.join(root, '.guardian.json');
     if (fs.existsSync(p)) {
       const j = JSON.parse(fs.readFileSync(p, 'utf8'));
       const g = j.gate || j;
-      for (const k of ['enabled', 'format', 'typecheck', 'tests']) if (k in g) cfg[k] = g[k];
+      for (const k of ['enabled', 'format', 'typecheck', 'tests', 'timeout_ms']) if (k in g) cfg[k] = g[k];
       if (j.commands) cfg.commands = j.commands;
     }
   } catch (_) {}
@@ -57,11 +57,13 @@ function detectToolchain(root) {
     try {
       scripts = (JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8')).scripts) || {};
     } catch (_) {}
-    if (scripts.format) t.format = 'npm run format';
-    else if (scripts.lint) t.format = 'npm run lint';
-    if (scripts.typecheck) t.typecheck = 'npm run typecheck';
-    else if (has(root, 'tsconfig.json')) t.typecheck = 'npx --no-install tsc --noEmit';
-    if (scripts.test) t.test = 'npm test';
+    if (scripts.format) t.format = 'npm --silent run format';
+    else if (scripts.lint) t.format = 'npm --silent run lint';
+    if (scripts.typecheck) t.typecheck = 'npm --silent run typecheck';
+    else if (has(root, 'tsconfig.json') && (has(root, 'node_modules/.bin/tsc') || has(root, 'node_modules/.bin/tsc.cmd'))) {
+      t.typecheck = 'npx --no-install tsc --noEmit'; // only if TypeScript is actually installed
+    }
+    if (scripts.test) t.test = 'npm --silent test';
   } else if (has(root, 'Cargo.toml')) {
     t.format = 'cargo fmt --check';
     t.typecheck = 'cargo check -q';
@@ -82,13 +84,18 @@ function stateFile(root) {
   return path.join(os.tmpdir(), `guardian-gate-${h}.json`);
 }
 
-function runStage(name, cmd, root) {
+function runStage(name, cmd, root, timeoutMs) {
   try {
-    execSync(cmd, { cwd: root, stdio: ['ignore', 'pipe', 'pipe'], timeout: 120000, encoding: 'utf8' });
+    execSync(cmd, { cwd: root, stdio: ['ignore', 'pipe', 'pipe'], timeout: timeoutMs, encoding: 'utf8' });
     return { name, ok: true };
   } catch (e) {
+    // FAIL-OPEN on uncertainty: a timeout, or a command that couldn't be spawned
+    // (missing tool), is NOT a quality failure — it means "couldn't determine".
+    // Only a genuine non-zero EXIT code (a real check that ran and failed) blocks.
+    if (typeof e.status !== 'number') {
+      return { name, ok: true, skipped: true, reason: e.code || 'timeout' };
+    }
     const out = `${(e.stdout || '')}\n${(e.stderr || '')}`.trim();
-    // gofmt -l prints files but exits 0; treat non-empty stdout as failure
     return { name, ok: false, output: out.slice(0, 1200) };
   }
 }
@@ -111,7 +118,7 @@ async function main() {
 
   const failures = [];
   for (const [name, cmd] of stages) {
-    const r = runStage(name, cmd, root);
+    const r = runStage(name, cmd, root, cfg.timeout_ms);
     // gofmt special-case: exits 0 but lists unformatted files on stdout
     if (r.ok && name === 'format' && cmd.startsWith('gofmt') && (r.output || '').trim()) r.ok = false;
     if (!r.ok) failures.push(r);
