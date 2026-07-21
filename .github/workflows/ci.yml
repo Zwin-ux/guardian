@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      # NOTE: pin these to full commit SHAs before submitting to the marketplace.
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Run firewall fixtures
+        run: node tests/firewall.test.js
+      - name: Syntax-check hooks
+        run: node --check hooks/guard.js && node --check hooks/done-gate.js

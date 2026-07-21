@@ -1,0 +1,13 @@
+{
+  "name": "grok-build-guardian",
+  "version": "0.1.0",
+  "description": "Guardrails + a definition-of-done gate for AI coding agents on Grok Build.",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "test": "node tests/firewall.test.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

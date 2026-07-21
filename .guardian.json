@@ -1,0 +1,15 @@
+{
+  "//": "Grok Build Guardian config. All fields optional; these are the defaults.",
+  "gate": {
+    "enabled": true,
+    "format": true,
+    "typecheck": true,
+    "tests": false
+  },
+  "commands": {
+    "//": "Override auto-detected commands, e.g. \"format\": \"npm run fmt\". Omit to auto-detect.",
+    "format": null,
+    "typecheck": null,
+    "test": null
+  }
+}
