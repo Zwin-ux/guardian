@@ -1,6 +1,6 @@
 {
   "name": "grok-build-guardian",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Guardrails + a definition-of-done gate for AI coding agents on Grok Build.",
   "license": "MIT",
   "private": true,

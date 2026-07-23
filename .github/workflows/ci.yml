@@ -16,12 +16,22 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      # NOTE: pin these to full commit SHAs before submitting to the marketplace.
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      # Actions pinned to full commit SHAs (supply-chain hygiene).
+      # Resolved from the moving v4 tags on 2026-07-23 via git ls-remote;
+      # both v4 tags were lightweight and equal to their v4.4.0 releases.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0 (v4)
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0 (v4)
         with:
           node-version: "20"
-      - name: Run firewall fixtures
+      - name: Syntax-check all entry files
+        run: node --check hooks/guard.js && node --check hooks/done-gate.js && node --check lib/normalize-command.js && node --check lib/rules.js && node --check lib/policy.js && node --check lib/decision.js && node --check tools/check-command.js && node --check tools/validate-manifests.js && node --check tests/firewall.test.js && node --check tests/mutations.test.js && node --check tests/done-gate.test.js && node --check bench/guard-benchmark.js
+      - name: Validate plugin manifests
+        run: node tools/validate-manifests.js
+      - name: Firewall fixtures
         run: node tests/firewall.test.js
-      - name: Syntax-check hooks
-        run: node --check hooks/guard.js && node --check hooks/done-gate.js
+      - name: Adversarial mutation suite
+        run: node tests/mutations.test.js
+      - name: Done-gate integration tests
+        run: node tests/done-gate.test.js
+      - name: Benchmark smoke (no timing assertions)
+        run: node bench/guard-benchmark.js

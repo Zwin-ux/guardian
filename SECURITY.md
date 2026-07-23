@@ -27,6 +27,15 @@ Grok Build Guardian is a security tool, so it holds itself to its own bar.
 
 ## Reporting a vulnerability
 
-Open a private security advisory on the GitHub repository, or email the
-maintainer listed in `.grok-plugin/plugin.json`. Please do not open a public
-issue for a vulnerability.
+Open a private security advisory on the GitHub repository
+([Zwin-ux/guardian](https://github.com/Zwin-ux/guardian/security/advisories)),
+or contact the maintainer listed in `.grok-plugin/plugin.json`. Please do not
+open a public issue for a vulnerability.
+
+**Responsible disclosure:** report privately first; you'll get an
+acknowledgment within 7 days. Please allow up to 90 days for a fix before any
+public disclosure — Guardian will credit reporters in the changelog unless you
+prefer otherwise. Note that documented out-of-scope bypasses
+(see `THREAT_MODEL.md`) are limitations, not vulnerabilities; a report that a
+*good-faith agent's accidental command* slips through IS in scope and very
+welcome.
