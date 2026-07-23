@@ -83,13 +83,12 @@ function toolAvailable(cmd) {
   }
 }
 
-// PATH with cargo/go directories removed, to simulate a missing toolchain.
+// Minimal PATH containing only node's own directory, to simulate a missing
+// toolchain deterministically. Filtering the inherited PATH by entry name is
+// not enough: CI runners expose go via /usr/local/bin symlinks and
+// hostedtoolcache dirs that no name pattern reliably catches.
 function pathWithoutRustGo() {
-  const sep = path.delimiter;
-  return (process.env.PATH || process.env.Path || '')
-    .split(sep)
-    .filter((p) => !/cargo/i.test(p) && !/[\\/]go[\\/]?(bin)?[\\/]?$/i.test(p))
-    .join(sep);
+  return path.dirname(process.execPath);
 }
 
 const nodeCmd = (js) => `node -e "${js}"`; // js must not contain double quotes
