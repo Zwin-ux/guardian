@@ -86,8 +86,8 @@ function stateFile(root) {
 
 function runStage(name, cmd, root, timeoutMs) {
   try {
-    execSync(cmd, { cwd: root, stdio: ['ignore', 'pipe', 'pipe'], timeout: timeoutMs, encoding: 'utf8' });
-    return { name, ok: true };
+    const out = execSync(cmd, { cwd: root, stdio: ['ignore', 'pipe', 'pipe'], timeout: timeoutMs, encoding: 'utf8' });
+    return { name, ok: true, output: out };
   } catch (e) {
     // FAIL-OPEN on uncertainty: a timeout, or a command that couldn't be spawned
     // (missing tool), is NOT a quality failure — it means "couldn't determine".
@@ -96,6 +96,22 @@ function runStage(name, cmd, root, timeoutMs) {
       return { name, ok: true, skipped: true, reason: e.code || 'timeout' };
     }
     const out = `${(e.stdout || '')}\n${(e.stderr || '')}`.trim();
+    // A shell that couldn't FIND the tool still exits with a number: 127
+    // (POSIX not found), 126 (found but not executable), and on Windows
+    // cmd.exe exits 1 with "'x' is not recognized as an internal or external
+    // command" (measured; the folklore 9009 is the interactive ERRORLEVEL).
+    // Likewise `python -m mypy` without mypy installed exits 1 with
+    // "No module named". A missing toolchain is not a failing quality gate.
+    const toolMissing =
+      e.status === 127 ||
+      e.status === 126 ||
+      e.status === 9009 ||
+      /is not recognized as an internal or external command/i.test(out) ||
+      /command not found/i.test(out) ||
+      /No module named/i.test(out);
+    if (toolMissing) {
+      return { name, ok: true, skipped: true, reason: 'tool-missing' };
+    }
     return { name, ok: false, output: out.slice(0, 1200) };
   }
 }
@@ -117,14 +133,27 @@ async function main() {
   if (stages.length === 0) return process.exit(0); // no toolchain → do nothing (fail-open)
 
   const failures = [];
+  const skipped = [];
   for (const [name, cmd] of stages) {
     const r = runStage(name, cmd, root, cfg.timeout_ms);
     // gofmt special-case: exits 0 but lists unformatted files on stdout
-    if (r.ok && name === 'format' && cmd.startsWith('gofmt') && (r.output || '').trim()) r.ok = false;
+    if (r.ok && !r.skipped && name === 'format' && cmd.startsWith('gofmt') && (r.output || '').trim()) {
+      r.ok = false;
+      r.output = `unformatted files (gofmt -l):\n${r.output.trim()}`.slice(0, 1200);
+    }
+    if (r.skipped) skipped.push(r);
     if (!r.ok) failures.push(r);
   }
 
-  if (failures.length === 0) return process.exit(0); // clean finish — allow
+  if (failures.length === 0) {
+    // clean finish — allow; surface any skipped checks visibly (fail-open,
+    // but never silently: an unrun check must not read as a passing check)
+    if (skipped.length) {
+      const note = `⚠️ Guardian: could not run ${skipped.map((s) => `${s.name} (${s.reason})`).join(', ')} — skipped, allowing finish (fail-open).`;
+      process.stdout.write(JSON.stringify({ hookSpecificOutput: { hookEventName: 'Stop', additionalContext: note } }));
+    }
+    return process.exit(0);
+  }
 
   // No-progress guard: if the identical failures repeat, stop blocking.
   const sig = crypto
