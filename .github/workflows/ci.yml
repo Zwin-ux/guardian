@@ -24,11 +24,13 @@ jobs:
         with:
           node-version: "20"
       - name: Syntax-check all entry files
-        run: node --check hooks/guard.js && node --check hooks/done-gate.js && node --check lib/normalize-command.js && node --check lib/rules.js && node --check lib/policy.js && node --check lib/decision.js && node --check tools/check-command.js && node --check tools/validate-manifests.js && node --check tests/firewall.test.js && node --check tests/mutations.test.js && node --check tests/done-gate.test.js && node --check bench/guard-benchmark.js
+        run: node --check hooks/guard.js && node --check hooks/done-gate.js && node --check lib/normalize-command.js && node --check lib/rules.js && node --check lib/policy.js && node --check lib/decision.js && node --check tools/check-command.js && node --check tools/validate-manifests.js && node --check tests/firewall.test.js && node --check tests/bypass-corpus.test.js && node --check tests/mutations.test.js && node --check tests/done-gate.test.js && node --check bench/guard-benchmark.js
       - name: Validate plugin manifests
         run: node tools/validate-manifests.js
       - name: Firewall fixtures
         run: node tests/firewall.test.js
+      - name: Known-bypass corpus pins
+        run: node tests/bypass-corpus.test.js
       - name: Adversarial mutation suite
         run: node tests/mutations.test.js
       - name: Done-gate integration tests

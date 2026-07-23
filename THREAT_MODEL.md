@@ -60,7 +60,9 @@ Shell-wrapper indirection is unwrapped up to **2 levels** for `sh -c`,
 
 ## Out of scope — known bypasses (verified against the engine)
 
-Each of these was run against `evaluatePolicy` and confirmed to be ALLOWED.
+Each of these is pinned as ALLOWED by `tests/bypass-corpus.test.js`, which
+runs in CI — a rule change that starts blocking one fails the suite until
+this document is updated in the same commit.
 They stay out of scope deliberately; the cure (resolving variables, decoding
 payloads, blocking common tools) would either require executing untrusted
 input or create false positives on everyday commands.

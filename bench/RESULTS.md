@@ -9,7 +9,7 @@ Produced by `npm run bench` (`bench/guard-benchmark.js`): deterministic inputs,
 500 warmup + 5000 measured iterations per scenario, timed with
 `process.hrtime.bigint()`.
 
-## Windows 11, Node v24.18.0 (2026-07-23)
+## Windows 11, Node v24.18.0 (2026-07-22)
 
 - os: Windows_NT 10.0.26200 (x64), 12th Gen Intel(R) Core(TM) i7-12650H
 - node: v24.18.0 (note: CI runs Node 20; the engine uses no Node-24-only APIs)

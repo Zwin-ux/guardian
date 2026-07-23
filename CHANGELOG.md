@@ -3,7 +3,7 @@
 All notable changes to Grok Build Guardian. Format follows
 [Keep a Changelog](https://keepachangelog.com/); versions follow semver.
 
-## [0.2.0] - 2026-07-23
+## [0.2.0] - 2026-07-22
 
 ### Changed
 - **Firewall refactored into a pure structured policy engine** (`lib/`):
