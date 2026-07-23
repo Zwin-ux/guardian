@@ -1,11 +1,15 @@
 {
   "name": "grok-build-guardian",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Guardrails + a definition-of-done gate for AI coding agents on Grok Build.",
   "license": "MIT",
   "private": true,
   "scripts": {
-    "test": "node tests/firewall.test.js"
+    "test": "node tests/firewall.test.js && node tests/bypass-corpus.test.js && node tests/mutations.test.js && node tests/done-gate.test.js",
+    "test:firewall": "node tests/firewall.test.js",
+    "test:mutations": "node tests/mutations.test.js",
+    "test:gate": "node tests/done-gate.test.js",
+    "bench": "node bench/guard-benchmark.js"
   },
   "engines": {
     "node": ">=18"

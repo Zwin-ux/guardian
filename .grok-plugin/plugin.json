@@ -1,13 +1,13 @@
 {
   "name": "grok-build-guardian",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Makes coding agents finish work cleanly: blocks catastrophic shell commands before they run, and won't let the agent end its turn until formatting, type-checks, and tests pass. Local, auditable, no network.",
   "author": {
     "name": "Zwin-ux",
     "url": "https://github.com/Zwin-ux"
   },
-  "homepage": "https://github.com/Zwin-ux/grok-build-guardian",
-  "repository": "https://github.com/Zwin-ux/grok-build-guardian",
+  "homepage": "https://github.com/Zwin-ux/guardian",
+  "repository": "https://github.com/Zwin-ux/guardian",
   "license": "MIT",
   "keywords": [
     "grok build guardian",
